@@ -4,6 +4,7 @@ export foo
 using Test
 
 function foo()
+    println()
     @test true
 end
 

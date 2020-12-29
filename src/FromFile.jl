@@ -40,9 +40,9 @@ function from_m(m::Module, path::String, ex::Expr)
         end
     end
 
-    if root === Main && (isinteractive() || !isdefined(Main, Symbol(path)))
+    if root === Main && !isdefined(Main, Symbol(path))
         return quote
-            $(Symbol(path)) = $file_module
+            const $(Symbol(path)) = $file_module
             $loading
         end
     end
@@ -59,8 +59,7 @@ end
 
 function load_module_from_main(path)
     file_module_sym = Symbol(path)
-    # always reload file when it's in interactive mode and in Main
-    if haskey(loaded_path, path) && !isinteractive()
+    if haskey(loaded_path, path)
         return loaded_path[path]
     else
         file_module = Base.eval(Base.__toplevel__, :(module $(file_module_sym) end))
