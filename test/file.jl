@@ -1,7 +1,10 @@
 module A
 
+export foo
+using Test
+
 function foo()
-    println("hello")
+    @test true
 end
 
 end

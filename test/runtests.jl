@@ -3,5 +3,9 @@ using Test
 
 @from "test/file.jl" using A
 
-path = abspath("test/file.jl")
-m = getfield(From.__toplevel__, Symbol(path))
+const project_path = dirname(dirname(pathof(FromFile)))
+
+@testset "Main using A" begin
+    @test fullname(A) == (Symbol(abspath(joinpath(project_path, "test", "file.jl"))), :A)
+    foo()
+end
