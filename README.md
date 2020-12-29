@@ -31,24 +31,26 @@ The suggested syntax is `from "../folder/file.jl" import myobj1, myobj2`, which 
 
 If all of `myobj1`, `myobj2`, etc. are modules, then `import` may be replaced with `using` to instead get access to all symbols exported by those modules.
 
-Thus, the above is essentially syntactic sugar for:
-- Create `PackageName.__toplevel__` if it does not already exist.
-- If `PackageName.__toplevel__.Symbol("../folder/file.jl")` does not already exist:
-    - Create `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
-    - `include("../folder/file.jl")` into `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
-- Evaluate one of the following expressions, according to the precise syntax used:
-    - `from "../folder/file.jl" import myobj1, myobj2`:  
-    `import PackageName.__toplevel__.Symbol("../folder/file.jl"): myobj1, myobj2`
-    - `from "../folder/file.jl" import mymodule: myobj1, myobj2`:  
-    `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
-    - `from "../folder/file.jl" import mymodule.myobj1, mymodule.myobj2`:  
-    `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule.myobj1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule.myobj2`
-    - `from "../folder/file.jl" using mymodule1, mymodule2`:  
-    `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule2`
-    - `from "../folder/file.jl" using mymodule: myobj1, myobj2`:  
-    `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
-
 Two other alternate syntaxes for similar behaviour are `from ..folder.file import myobj1, myobj2` and `import "../folder/file.jl": myobj1, myobj2`. These are all roughly equivalent, so there are no strong feelings about which to use. (Those using `from` seem to read a little neater, but do introduce an extra keyword.)
+
+## Implementation
+
+The above is essentially syntactic sugar for:
+- Create `PackageName.__toplevel__` as a baremodule if it does not already exist.
+- If `PackageName.__toplevel__.Symbol("../folder/file.jl")` does not already exist:
+    - Create `PackageName.__toplevel__.Symbol("../folder/file.jl")` as a module.
+    - `include("../folder/file.jl")` into `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
+- Evaluate one of the following expressions, according to the precise syntax used, where for readability we let `m` denote `PackageName.__toplevel__.Symbol("../folder/file.jl")`:
+    - `from "../folder/file.jl" import myobj1, myobj2`:  
+    `import m: myobj1, myobj2`
+    - `from "../folder/file.jl" import mymodule: myobj1, myobj2`:  
+    `import m.mymodule: myobj1, myobj2`
+    - `from "../folder/file.jl" import mymodule.myobj1, mymodule.myobj2`:  
+    `import m.mymodule.myobj1, m.mymodule.myobj2`
+    - `from "../folder/file.jl" using mymodule1, mymodule2`:  
+    `using m.mymodule1, m.mymodule2`
+    - `from "../folder/file.jl" using mymodule: myobj1, myobj2`:  
+    `using m.mymodule: myobj1, myobj2`
 
 ## Alternate proposals
 
