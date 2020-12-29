@@ -21,8 +21,8 @@ function from_m(m::Module, path::String, ex::Expr)
 
     if root === Main
         toplevel = __toplevel__
-    else:
-        toplevel_symbol = Symbol("__toplevel__")
+    else
+        toplevel_symbol = :__toplevel__
         if isdefined(root, toplevel_symbol) # package
             toplevel = getfield(root, toplevel_symbol)
         else
