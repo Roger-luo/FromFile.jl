@@ -21,10 +21,10 @@ function from_m(m::Module, path::String, ex::Expr)
 
     if root === Main
         toplevel = __toplevel__
-    elseif isdefined(root, Symbol("#__toplevel__")) # package
-        toplevel = getfield(root, Symbol("#__toplevel__"))
+    elseif isdefined(root, Symbol("#__toplevel__#")) # package
+        toplevel = getfield(root, Symbol("#__toplevel__#"))
     else
-        toplevel = Base.eval(root, :(baremodule $(Symbol("#__toplevel__"));using Base;end))
+        toplevel = Base.eval(root, :(baremodule $(Symbol("#__toplevel__#"));using Base;end))
     end
 
     for each in ex.args
