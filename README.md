@@ -19,6 +19,10 @@ If a file has already been loaded then it would be looked up in the global refer
 
 File identity is determined by filesystem location.
 
+If the specified file does not exist in the specified location, then an error is raised.
+
+Files are looked up relative to the filesystem location of the file in which the statement is written.
+
 As every file then imports its dependencies, then both of the major issues previously identified are resolved.
 
 ## Syntax
@@ -27,22 +31,24 @@ The suggested syntax is `from "../folder/file.jl" import myobj1, myobj2`, which 
 
 If all of `myobj1`, `myobj2`, etc. are modules, then `import` may be replaced with `using` to instead get access to all symbols exported by those modules.
 
-If the specified file does not exist in the specified location, then an error is raised.
-
-Files are looked up relative to the filesystem location of the file in which the statement is written.
-
 Thus, the above is essentially syntactic sugar for:
 - Create `PackageName.__toplevel__` if it does not already exist.
 - If `PackageName.__toplevel__.Symbol("../folder/file.jl")` does not already exist:
     - Create `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
     - `include("../folder/file.jl")` into `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
 - Evaluate one of the following expressions, according to the precise syntax used:
-    - `from "../folder/file.jl" import myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl"): myobj1, myobj2`
-    - `from "../folder/file.jl" import mymodule: myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
-    - `from "../folder/file.jl" using mymodule1, mymodule2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule2`
-    - `from "../folder/file.jl" using mymodule: myobj1, myobj2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
+    - `from "../folder/file.jl" import myobj1, myobj2`:  
+    `import PackageName.__toplevel__.Symbol("../folder/file.jl"): myobj1, myobj2`
+    - `from "../folder/file.jl" import mymodule: myobj1, myobj2`:  
+    `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
+    - `from "../folder/file.jl" import mymodule.myobj1, mymodule.myobj2`:  
+    `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule.myobj1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule.myobj2`
+    - `from "../folder/file.jl" using mymodule1, mymodule2`:  
+    `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule2`
+    - `from "../folder/file.jl" using mymodule: myobj1, myobj2`:  
+    `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
 
-Two other alternate syntaxes for similar behaviour are `from ..folder.file import myobj1, myobj2` and `import "../folder/file.jl": myobj1, myobj2`. These all seem to be essentially equivalent, so there are no strong feelings about which to use. (Those using `from` seem to read a little neater, but do introduce an extra keyword.)
+Two other alternate syntaxes for similar behaviour are `from ..folder.file import myobj1, myobj2` and `import "../folder/file.jl": myobj1, myobj2`. These are all roughly equivalent, so there are no strong feelings about which to use. (Those using `from` seem to read a little neater, but do introduce an extra keyword.)
 
 ## Alternate proposals
 
