@@ -1,6 +1,7 @@
-using From
+using FromFile
 using Test
 
-@testset "From.jl" begin
-    # Write your tests here.
-end
+@from "test/file.jl" using A
+
+path = abspath("test/file.jl")
+m = getfield(From.__toplevel__, Symbol(path))
