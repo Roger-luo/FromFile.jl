@@ -13,19 +13,7 @@ function from_m(m::Module, path::String, ex::Expr)
     path = abspath(normpath(path))
     loading = Expr(ex.head)
     root = root_module(m)
-
-    if root === Main
-        toplevel = Base.__toplevel__
-    else
-        toplevel_symbol = Symbol("#__toplevel__#")
-        if isdefined(root, toplevel_symbol) # package
-            toplevel = getfield(root, toplevel_symbol)
-        else
-            toplevel = Base.eval(root, :(baremodule $toplevel_symbol; using Base; end))
-        end
-    end
-
-    file_module = load_module(toplevel, root, path)
+    file_module = load_module(root, path)
 
     for each in ex.args
         each isa Expr || continue
@@ -45,24 +33,6 @@ function from_m(m::Module, path::String, ex::Expr)
     return loading
 end
 
-function load_module(toplevel::Module, root::Module, path::String)
-    if root === Main
-        file_module_sym = Symbol(path)
-        toplevel
-    else
-        file_module_sym = Symbol(relpath(path, pathof(root)))
-    end
-
-    if isdefined(toplevel, file_module_sym)
-        file_module = getfield(toplevel, file_module_sym)
-    else
-        file_module = Base.eval(toplevel, :(module $(file_module_sym); end))
-        Base.include(file_module, path)
-    end
-
-    return file_module
-end
-
 function load_module(root::Module, path::String)
     if root === Main
         return load_module_from_main(path)
@@ -76,7 +46,7 @@ function load_module_from_main(path)
     if haskey(loaded_path, path)
         return loaded_path[path]
     else
-        file_module = include(Base.__toplevel__, :(module; $(file_module_sym); end;))
+        file_module = Base.eval(Base.__toplevel__, :(module $(file_module_sym) end))
         loaded_path[path] = file_module
         return file_module
     end
