@@ -9,8 +9,6 @@ baremodule __toplevel__
     using Base
 end
 
-const loaded_path = String[]
-
 macro from(path::String, ex)
     esc(from_m(__module__, path, ex))
 end
@@ -49,8 +47,6 @@ function from_m(m::Module, path::String, ex::Expr)
 end
 
 function load_module(toplevel::Module, root::Module, path::String, name::Symbol)
-    # evaluate file
-    # 1. create a path module inside __toplevel__
     if root === Main
         file_module_sym = Symbol(path)
     else
@@ -60,12 +56,8 @@ function load_module(toplevel::Module, root::Module, path::String, name::Symbol)
     if isdefined(toplevel, file_module_sym)
         file_module = getfield(toplevel, file_module_sym)
     else
-        file_module = Base.eval(toplevel, :(baremodule $(file_module_sym);using Base;end))
-    end
-    # 2. evaluate the file inside the path module, so we get identical module path
-    if !(path in loaded_path)
+        file_module = Base.eval(toplevel, :(module $(file_module_sym); end))
         Base.include(file_module, path)
-        push!(loaded_path, path)
     end
 
     if !isdefined(file_module, name)
@@ -76,8 +68,10 @@ end
 
 function root_module(m::Module)
     root = parentmodule(m)
-    while root !== m
-        root = parentmodule(m)
+    prev = m
+    while root !== prev
+        prev = root
+        root = parentmodule(root)
     end
     return root
 end
