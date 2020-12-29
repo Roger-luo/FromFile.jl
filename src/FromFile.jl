@@ -21,11 +21,16 @@ function from_m(m::Module, path::String, ex::Expr)
 
     if root === Main
         toplevel = __toplevel__
-    elseif isdefined(root, Symbol("#__toplevel__#")) # package
-        toplevel = getfield(root, Symbol("#__toplevel__#"))
-    else
-        toplevel = Base.eval(root, :(baremodule $(Symbol("#__toplevel__#"));using Base;end))
+    else:
+        toplevel_symbol = Symbol("__toplevel__")
+        if isdefined(root, toplevel_symbol) # package
+            toplevel = getfield(root, toplevel_symbol)
+        else
+            toplevel = Base.eval(root, :(baremodule $toplevel_symbol; using Base; end))
+        end
     end
+    
+    file_module = load_module(toplevel, root, path)
 
     for each in ex.args
         each isa Expr || continue
@@ -33,13 +38,10 @@ function from_m(m::Module, path::String, ex::Expr)
         if each.head === :(:) # using/import A: a, b, c
             each.args[1].args[1] === :(.) && error("cannot load relative module from file")
             m_name = each.args[1].args[1]
-            file_module = load_module(toplevel, root, path, m_name)
             push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., m_name), each.args[2:end]...) )
-        elseif each.head === :(.) # using A, B, C
+        elseif each.head === :(.) # using/import A, B, C
             each.args[1] === :(.) && error("cannot load relative module from file")
             m_name = each.args[1] # module name
-            file_module = load_module(toplevel, root, path, m_name)
-            # create binding
             push!(loading.args, Expr(:., fullname(file_module)..., m_name))
         else
             error("invalid syntax $ex")
@@ -48,7 +50,7 @@ function from_m(m::Module, path::String, ex::Expr)
     return loading
 end
 
-function load_module(toplevel::Module, root::Module, path::String, name::Symbol)
+function load_module(toplevel::Module, root::Module, path::String)
     if root === Main
         file_module_sym = Symbol(path)
     else
@@ -62,9 +64,6 @@ function load_module(toplevel::Module, root::Module, path::String, name::Symbol)
         Base.include(file_module, path)
     end
 
-    if !isdefined(file_module, name)
-        error("cannot find module $name from $path")
-    end
     return file_module
 end
 
