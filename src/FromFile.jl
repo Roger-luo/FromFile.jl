@@ -2,8 +2,6 @@ module FromFile
 
 export @from
 
-using MatchCore
-
 # This replicates Base.__toplevel__
 baremodule __toplevel__
     using Base
