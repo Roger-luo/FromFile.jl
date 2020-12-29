@@ -37,10 +37,10 @@ Thus, the above is essentially syntactic sugar for:
     - Create `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
     - `include("../folder/file.jl")` into `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
 - Evaluate one of the following expressions, according to the precise syntax used:
-    - `from "../folder/file.jl" import myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl"): myobj1, myobj2
-    - `from "../folder/file.jl" import mymodule: myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2
-    - `from "../folder/file.jl" using mymodule1, mymodule2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule2
-    - `from "../folder/file.jl" using mymodule: myobj1, myobj2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2
+    - `from "../folder/file.jl" import myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl"): myobj1, myobj2`
+    - `from "../folder/file.jl" import mymodule: myobj1, myobj2` ---> `import PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
+    - `from "../folder/file.jl" using mymodule1, mymodule2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule1, PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule2`
+    - `from "../folder/file.jl" using mymodule: myobj1, myobj2` ---> `using PackageName.__toplevel__.Symbol("../folder/file.jl").mymodule: myobj1, myobj2`
 
 Two other alternate syntaxes for similar behaviour are `from ..folder.file import myobj1, myobj2` and `import "../folder/file.jl": myobj1, myobj2`. These all seem to be essentially equivalent, so there are no strong feelings about which to use. (Those using `from` seem to read a little neater, but do introduce an extra keyword.)
 
