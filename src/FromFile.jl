@@ -40,9 +40,9 @@ function from_m(m::Module, path::String, ex::Expr)
         end
     end
 
-    if root === Main && !isdefined(Main, Symbol(path))
+    if root === Main && (isinteractive() || !isdefined(Main, Symbol(path)))
         return quote
-            const $(Symbol(path)) = $file_module
+            $(Symbol(path)) = $file_module
             $loading
         end
     end

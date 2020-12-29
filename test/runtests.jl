@@ -2,6 +2,7 @@ using FromFile
 using Test
 
 @from "test/file.jl" using A
+@from "test/file.jl" import B
 
 const project_path = dirname(dirname(pathof(FromFile)))
 
