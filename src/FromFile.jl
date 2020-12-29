@@ -21,13 +21,29 @@ function from_m(m::Module, path::String, ex::Expr)
         if each.head === :(:) # using/import A: a, b, c
             m_name = each.args[1].args[1]
             m_name === :(.) && error("cannot load relative module from file")
-            push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., m_name), each.args[2:end]...) )
+            if root === Main
+                push!(loading.args, Expr(:(:), Expr(:., :., fullname(file_module)..., m_name), each.args[2:end]...) )
+            else
+                push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., m_name), each.args[2:end]...) )
+            end
         elseif each.head === :(.) # using/import A, B, C
             m_name = each.args[1] # module name
             m_name === :(.) && error("cannot load relative module from file")
-            push!(loading.args, Expr(:., fullname(file_module)..., m_name))
+
+            if root === Main
+                push!(loading.args, Expr(:., :., fullname(file_module)..., m_name))
+            else
+                push!(loading.args, Expr(:., fullname(file_module)..., m_name))
+            end
         else
             error("invalid syntax $ex")
+        end
+    end
+
+    if root === Main && !isdefined(Main, Symbol(path))
+        return quote
+            const $(Symbol(path)) = $file_module
+            $loading
         end
     end
     return loading
@@ -47,6 +63,7 @@ function load_module_from_main(path)
         return loaded_path[path]
     else
         file_module = Base.eval(Base.__toplevel__, :(module $(file_module_sym) end))
+        Base.include(file_module, path)
         loaded_path[path] = file_module
         return file_module
     end
