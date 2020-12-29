@@ -58,8 +58,9 @@ function load_module(root::Module, path::String)
 end
 
 function load_module_from_main(path)
-    file_module_sym = Symbol(path)    
-    if haskey(loaded_path, path)
+    file_module_sym = Symbol(path)
+    # always reload file when it's in interactive mode and in Main
+    if haskey(loaded_path, path) && !isinteractive()
         return loaded_path[path]
     else
         file_module = Base.eval(Base.__toplevel__, :(module $(file_module_sym) end))
