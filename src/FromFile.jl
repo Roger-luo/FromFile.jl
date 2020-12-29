@@ -2,10 +2,7 @@ module FromFile
 
 export @from
 
-# This replicates Base.__toplevel__
-baremodule __toplevel__
-    using Base
-end
+const loaded_path = Dict{String, Module}()
 
 macro from(path::String, ex)
     esc(from_m(__module__, path, ex))
@@ -18,7 +15,7 @@ function from_m(m::Module, path::String, ex::Expr)
     root = root_module(m)
 
     if root === Main
-        toplevel = __toplevel__
+        toplevel = Base.__toplevel__
     else
         toplevel_symbol = Symbol("#__toplevel__#")
         if isdefined(root, toplevel_symbol) # package
@@ -27,7 +24,7 @@ function from_m(m::Module, path::String, ex::Expr)
             toplevel = Base.eval(root, :(baremodule $toplevel_symbol; using Base; end))
         end
     end
-    
+
     file_module = load_module(toplevel, root, path)
 
     for each in ex.args
@@ -51,6 +48,7 @@ end
 function load_module(toplevel::Module, root::Module, path::String)
     if root === Main
         file_module_sym = Symbol(path)
+        toplevel
     else
         file_module_sym = Symbol(relpath(path, pathof(root)))
     end
@@ -62,6 +60,43 @@ function load_module(toplevel::Module, root::Module, path::String)
         Base.include(file_module, path)
     end
 
+    return file_module
+end
+
+function load_module(root::Module, path::String)
+    if root === Main
+        return load_module_from_main(path)
+    else
+        return load_module_from_package(root, path)
+    end
+end
+
+function load_module_from_main(path)
+    file_module_sym = Symbol(path)    
+    if haskey(loaded_path, path)
+        return loaded_path[path]
+    else
+        file_module = include(Base.__toplevel__, :(module; $(file_module_sym); end;))
+        loaded_path[path] = file_module
+        return file_module
+    end
+end
+
+function load_module_from_package(root, path)
+    toplevel_symbol = Symbol("#__toplevel__#")
+    file_module_sym = Symbol(relpath(path, pathof(root)))
+    if isdefined(root, toplevel_symbol) # package
+        toplevel = getfield(root, toplevel_symbol)
+    else
+        toplevel = Base.eval(root, :(baremodule $toplevel_symbol; using Base; end))
+    end
+
+    if isdefined(toplevel, file_module_sym)
+        file_module = getfield(toplevel, file_module_sym)
+    else
+        file_module = Base.eval(toplevel, :(module $(file_module_sym); end))
+        Base.include(file_module, path)
+    end
     return file_module
 end
 
