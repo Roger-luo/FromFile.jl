@@ -10,7 +10,15 @@ end
 
 function from_m(m::Module, path::String, ex::Expr)
     ex.head === :using || ex.head === :import || error("expect using/import statement")
-    path = abspath(normpath(path))
+    # file path should always be relative to the
+    # module loads it, unless specified as absolute
+    # path or the module is created interactively
+    if !isabspath(path) && (pathof(m) !== nothing)
+        path = joinpath(dirname(pathof(m)), path)
+    else
+        path = abspath(normpath(path))
+    end
+
     loading = Expr(ex.head)
     root = root_module(m)
     file_module = load_module(root, path)
@@ -31,9 +39,9 @@ function from_m(m::Module, path::String, ex::Expr)
             m_name === :(.) && error("cannot load relative module from file")
 
             if root === Main
-                push!(loading.args, Expr(:., :., fullname(file_module)..., m_name))
+                push!(loading.args, Expr(:., :., fullname(file_module)..., each.args...))
             else
-                push!(loading.args, Expr(:., fullname(file_module)..., m_name))
+                push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
             end
         else
             error("invalid syntax $ex")
