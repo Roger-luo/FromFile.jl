@@ -1,10 +1,7 @@
 name = "FromFile"
 uuid = "ff7dd447-1dcb-4ce3-b8ac-22a812192de7"
-authors = ["Roger-luo <rogerluo.rl18@gmail.com> and contributors"]
+authors = ["Roger Luo <rogerluo.rl18@gmail.com> and Patrick Kidger <contact@kidger.site>"]
 version = "0.1.0"
-
-[deps]
-MatchCore = "5dd3f0b1-72a9-48ad-ae6e-79f673da005f"
 
 [compat]
 julia = "1.6"
