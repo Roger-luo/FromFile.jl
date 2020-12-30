@@ -16,7 +16,7 @@ function from_m(m::Module, path::String, ex::Expr)
     if !isabspath(path) && (pathof(m) !== nothing)
         path = joinpath(dirname(pathof(m)), path)
     else
-        path = abspath(normpath(path))
+        path = abspath(path)
     end
 
     loading = Expr(ex.head)
@@ -78,7 +78,7 @@ function load_module_from_main(path)
 end
 
 function load_module_from_package(root, path)
-    toplevel_symbol = Symbol("#__toplevel__#")
+    toplevel_symbol = Symbol("#__imports__#")
     file_module_sym = Symbol(relpath(path, pathof(root)))
     if isdefined(root, toplevel_symbol) # package
         toplevel = getfield(root, toplevel_symbol)
