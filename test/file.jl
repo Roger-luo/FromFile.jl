@@ -1,19 +1,24 @@
 module A
+	export foo, B
+	
+	function foo()
+		"hello"
+	end
 
-export foo
-using Test
-
-function foo()
-    println()
-    @test true
+	function bar()
+		"goodbye"
+	end
+	
+	module B
+		baz = 5
+	end
 end
 
-end # module A
-
-module B
-
-export should_not_appear
-function should_not_appear()
+module C
+	export quux
+	
+	function quux()
+		"kaboom"
+	end
 end
 
-end # module B
