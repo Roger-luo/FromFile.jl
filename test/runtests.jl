@@ -62,43 +62,52 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10)
-		# Make sure that the module A always makes it in and is of the form we expect
-		has_A = isdefined(wrapper, :A)
-		@test has_A
-		if has_A  # avoid lots of noisy errors from the below tests if this fails
-			@test isdefined(wrapper.A, :foo)
-			@test isdefined(wrapper.A, :bar)
-			@test wrapper1.A.foo() == "hello"
-			@test wrapper1.A.bar() == "goodbye"
-			@test isdefined(wrapper.A, :B)
-			@test isdefined(wrapper.A.B, :baz)
-			@test wrapper.A.B.baz == 5
-		end
-		
-		# Make sure that the various attributes all either do or don't make it in.
-		if wrapper in (wrapper3, wrapper5, wrapper6, wrapper8)
-			@test isdefined(wrapper, :foo)
-			@test isdefined(wrapper, :B)
-		elseif wrapper in (wrapper2, wrapper4, wrapper7, wrapper10)
-			@test isdefined(wrapper, :foo)
-			@test !isdefined(wrapper, :B)
-		else
-			@test !isdefined(wrapper, :foo)
-			@test !isdefined(wrapper, :B)
-		end
-		@test !isdefined(wrapper, :bar)
-		
-		
-		# Make sure that the module C either does or doesn't make it in
-		if wrapper === wrapper9
-			@test isdefined(wrapper, :C)
-			@test !isdefined(wrapper, :quux)
-		elseif wrapper === wrapper10
-			@test isdefined(wrapper, :C)
-			@test isdefined(wrapper, :quux)
-		else
-			@test !isdefined(wrapper, :C)
-			@test !isdefined(wrapper, :quux)
+		@eval begin
+			# Make sure that the module A does or doesn't make it in
+			if $wrapper in (wrapper1, wrapper6, wrapper9, wrapper10)
+				@test isdefined($wrapper, :A)
+				@test isdefined($wrapper.A, :foo)
+				@test isdefined($wrapper.A, :bar)
+				@test $wrapper.A.foo() == "hello"
+				@test $wrapper.A.bar() == "goodbye"
+				@test isdefined($wrapper.A, :B)
+				@test isdefined($wrapper.A.B, :baz)
+				@test $wrapper.A.B.baz == 5
+			else
+				@test !isdefined($wrapper, :A)
+			end
+			
+			# Make sure that the various attributes all either do or don't make it in.
+			if $wrapper in (wrapper3, wrapper6, wrapper8, wrapper10)
+				@test isdefined($wrapper, :foo)
+				@test isdefined($wrapper, :B)
+			elseif $wrapper in (wrapper2, wrapper7)
+				@test isdefined($wrapper, :foo)
+				@test !isdefined($wrapper, :B)
+			elseif $wrapper === wrapper4
+				@test isdefined($wrapper.A, :foo)
+				@test !isdefined($wrapper.A, :B)
+			elseif $wrapper === wrapper5
+				@test isdefined($wrapper.A, :foo)
+				@test isdefined($wrapper.A, :B)
+			else
+				@test !isdefined($wrapper, :foo)
+				@test !isdefined($wrapper, :B)
+			end
+			@test !isdefined($wrapper, :bar)
+			
+			
+			# Make sure that the module C either does or doesn't make it in
+			if $wrapper === wrapper9
+				@test isdefined($wrapper, :C)
+				@test !isdefined($wrapper, :quux)
+			elseif $wrapper === wrapper10
+				@test isdefined($wrapper, :C)
+				@test isdefined($wrapper, :quux)
+			else
+				@test !isdefined($wrapper, :C)
+				@test !isdefined($wrapper, :quux)
+			end
 		end
 	end
 	

@@ -1,4 +1,6 @@
 module A
+	export foo, B
+	
 	function foo()
 		"hello"
 	end
@@ -13,6 +15,8 @@ module A
 end
 
 module C
+	export quux
+	
 	function quux()
 		"kaboom"
 	end
