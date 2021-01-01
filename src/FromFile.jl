@@ -45,7 +45,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
         elseif each.head === :(.) # using/import A, B, C
             m_name = each.args[1] # module name
             m_name === :(.) && error("cannot load relative module from file")
-            push!(loading.args, Expr(:., fullname(file_module)..., m_name))
+            push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
         else
             error("invalid syntax $ex")
         end

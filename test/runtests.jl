@@ -36,7 +36,7 @@ end
 module wrapper5
 	using FromFile
 	visible = [:foo, :B]
-	invisible = [:bar, :baz, :quux, :A, :B, :C]
+	invisible = [:bar, :baz, :quux, :A, :C]
 	
     @from "file.jl" import A.foo, A.B
 end
