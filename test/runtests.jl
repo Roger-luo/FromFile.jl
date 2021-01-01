@@ -6,7 +6,7 @@ module wrapper1
 	visible = [:A]
 	invisible = [:foo, :bar, :baz, :quux, :B, :C]
 	
-    @from "test/file.jl" import A
+    @from "file.jl" import A
 end
 
 module wrapper2
@@ -14,7 +14,7 @@ module wrapper2
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
-	@from "test/file.jl" import A: foo
+	@from "file.jl" import A: foo
 end
 
 module wrapper3
@@ -22,7 +22,7 @@ module wrapper3
 	visible = [:foo, :B]
 	invisible = [:bar, :baz, :quux, :A, :C]
 	
-	@from "test/file.jl" import A: foo, B
+	@from "file.jl" import A: foo, B
 end
 
 module wrapper4
@@ -30,15 +30,15 @@ module wrapper4
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
-    @from "test/file.jl" import A.foo
+    @from "file.jl" import A.foo
 end
 
 module wrapper5
 	using FromFile
 	visible = [:foo, :B]
-	invisible = [:bar, :baz, :quux, :A, :B, :C]
+	invisible = [:bar, :baz, :quux, :A, :C]
 	
-    @from "test/file.jl" import A.foo, A.B
+    @from "file.jl" import A.foo, A.B
 end
 
 module wrapper6
@@ -46,7 +46,7 @@ module wrapper6
 	visible = [:A, :foo, :B]
 	invisible = [:bar, :baz, :quux, :C]
 	
-	@from "test/file.jl" using A
+	@from "file.jl" using A
 end
 
 module wrapper7
@@ -54,7 +54,7 @@ module wrapper7
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
-	@from "test/file.jl" using A: foo
+	@from "file.jl" using A: foo
 end
 
 module wrapper8
@@ -62,7 +62,7 @@ module wrapper8
 	visible = [:foo, :B]
 	invisible = [:bar, :baz, :quux, :A, :C]
 	
-	@from "test/file.jl" using A: foo, B
+	@from "file.jl" using A: foo, B
 end
 
 module wrapper9
@@ -70,7 +70,7 @@ module wrapper9
 	visible = [:A, :C]
 	invisible = [:foo, :bar, :baz, :quux, :B]
 	
-    @from "test/file.jl" import A, C
+    @from "file.jl" import A, C
 end
 
 module wrapper10
@@ -78,7 +78,7 @@ module wrapper10
 	visible = [:foo, :quux, :A, :B, :C]
 	invisible = [:bar, :baz]
 	
-    @from "test/file.jl" using A, C
+    @from "file.jl" using A, C
 end
 
 @testset "Tests from REPL" begin
@@ -103,6 +103,5 @@ end
 	# Make sure that the import modules are where we expect them to be
 	project_path = dirname(dirname(pathof(FromFile)))
 	file_symbol = Symbol(abspath(joinpath(project_path, "test", "file.jl")))
-	@test fullname(wrapper1.A) == (:FromFile, :__toplevel__, file_symbol, :A)
-	@test isdefined(FromFile.__toplevel__, file_symbol)
+	@test fullname(wrapper1.A) == (:Main, file_symbol, :A)
 end
