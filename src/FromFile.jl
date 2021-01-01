@@ -18,8 +18,8 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
     if !isabspath(path) && basepath != ""
         path = joinpath(basepath, path)
     else
-		path = abspath(path)
-	end
+        path = abspath(path)
+    end
 	
     loading = Expr(ex.head)
     
