@@ -29,9 +29,7 @@ As every file then imports its dependencies, then both of the major issues previ
 
 The suggested syntax is `from "../folder/file.jl" import myobj1, myobj2`, which would expect and require objects with names `:myobj1`, `:myobj2` to be defined inside `file.jl`. These objects could be modules, functions, etc.
 
-If all of `myobj1`, `myobj2`, etc. are modules, then `import` may be replaced with `using` to instead get access to all symbols exported by those modules.
-
-Two other alternate syntaxes for similar behaviour are `from ..folder.file import myobj1, myobj2` and `import "../folder/file.jl": myobj1, myobj2`. These are all roughly equivalent, so there are no strong feelings about which to use. (Those using `from` seem to read a little neater, but do introduce an extra keyword.)
+If all of `myobj1`, `myobj2`, etc. are modules, then `import` may be replaced with `using` to instead get access to all symbols exported by those modules. Likewise the other usual variants on this syntax are supported, `... import mymodule: myobj` and so on.
 
 ## Implementation
 
@@ -70,3 +68,7 @@ One proposal was to demand that the filesystem lookup should be done relative to
 One proposal was to ignore the source file's location and use the current module's name to perform lookup wrt the source root of the package; i.e. to look in `src/B/D.jl` when encountering `import "D.jl"` within the module `B`. However this lacks the required expressivity, as it can only express trees, not DAGs.
 
 One proposal was to locate things in `Base.__toplevel__` rather than `PackageName.__toplevel__`. However this doesn't play well with static compilation.
+
+One proposal was to use the syntax `import "../folder/file.jl": myobj1, myobj2`. However this make it seem like `import "../folder/file.jl"` should also be valid, which it is not. (As we don't want to enforce a file<->module equivalence.)
+
+One proposal was to use the syntax `from ..folder.file import myobj1, myobj2`. However the current syntax better supports getting the file from an arbitrary URI.
