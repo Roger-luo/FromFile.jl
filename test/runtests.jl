@@ -1,4 +1,5 @@
-using FromFile
+import FromFile
+import FromFileTestPack
 using Test
 
 module wrapper1
@@ -135,6 +136,7 @@ end
 		end
 	end
 
+	# Check that nested @from works, and that navigating folder structures works
 	@test wrapper_chain.a == 1
 	@test wrapper_chain.b == 2
 	@test wrapper_chain.b2 == 2.5
@@ -142,4 +144,12 @@ end
 	@test wrapper_chain.c2 == 3.5
 	@test wrapper_chain.d == 4
 	@test wrapper_chain.e == 5
+	
+	# Check that @from works in packages
+	my_int = FromFileTestPack.MyInt(3)
+	@test FromFileTestPack.add_same_rand1(my_int) == FromFileTestPack.add_same_rand2(my_int)
+	@test FromFileTestPack.int_square(my_int).value == 9
+	@test FromFileTestPack.int_cube(my_int).value == 27
+	@test FromFileTestPack.int_unwrap(my_int) == 3
+	@test FromFileTestPack.int_square_unwrap(my_int) == 9
 end
