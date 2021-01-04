@@ -1,6 +1,28 @@
 # FromFile.jl
 
-This is a macro-based implementation of the below spec.
+This is a macro-based implementation of the specification detailed below, for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600). This package exports the macro `@from` which can be used in place of the keyword `from` proposed in the specification.
+
+## Package usage
+
+Objects in other files may be imported in the following way:
+
+```julia
+# file1.jl
+@from "file2.jl" import foo
+
+bar() = foo()
+
+#file2.jl
+foo() = println("hi")
+```
+
+File systems may be navigated: `@from "../folder/file.jl" import foo`
+
+The usual import syntax is supported; the only difference is that the objects are looked up in the file requested: `@from "file.jl" using MyModule`; `@from "file.jl" import MyModule: foo`; `@from "file.jl" import foo, bar`.
+
+Using `@from` to access a file multiple times (for example calling `@from "file.jl" import foo` in multiple files) will access the same objects each time; i.e. without the duplication issues that `include("file.jl")` would introduce.
+
+# Specification
 
 ## Problem
 Files (as distinct from modules and packages) naturally exhibit a dependency structure. Getting access to one file from another currently relies on using `include`, usually in some "parent" file.
@@ -13,9 +35,9 @@ This has two major issues:
 
 The proposal is to extend the `using`/`import` syntax, by giving it a mode by which it can access files.
 
-Each file loaded in this manner would be evaluated in total isolation, stored globally in `PackageName.__toplevel__`, and a binding added to the current context.
+Each file loaded in this manner would be evaluated in total isolation, stored globally in its package (which may be `Main`), and a binding added to the current context.
 
-If a file has already been loaded then it would be looked up in the global reference rather than being re-evaluated, to avoid duplication issues.
+If a file has already been loaded then it would be looked up in the global reference rather than being re-evaluated, which avoids duplication issues.
 
 File identity is determined by filesystem location.
 
@@ -34,21 +56,22 @@ If all of `myobj1`, `myobj2`, etc. are modules, then `import` may be replaced wi
 ## Implementation
 
 The above is essentially syntactic sugar for:
-- Create `PackageName.__toplevel__` as a baremodule if it does not already exist.
-- If `PackageName.__toplevel__.Symbol("../folder/file.jl")` does not already exist:
-    - Create `PackageName.__toplevel__.Symbol("../folder/file.jl")` as a module.
-    - `include("../folder/file.jl")` into `PackageName.__toplevel__.Symbol("../folder/file.jl")`.
-- Evaluate one of the following expressions, according to the precise syntax used, where for readability we let `m` denote `PackageName.__toplevel__.Symbol("../folder/file.jl")`:
-    - `from "../folder/file.jl" import myobj1, myobj2`:  
+- If `PackageName.var"folder/file.jl"` does not already exist:
+    - Create `PackageName.var"folder/file.jl"` as a module.
+    - `include("folder/file.jl")` into `PackageName.var"folder/file.jl"`.
+- Evaluate one of the following expressions, according to the precise syntax used, where for readability we let `m` denote `PackageName.var"folder/file.jl"`:
+    - `from "folder/file.jl" import myobj1, myobj2`:  
     `import m: myobj1, myobj2`
-    - `from "../folder/file.jl" import mymodule: myobj1, myobj2`:  
+    - `from "folder/file.jl" import mymodule: myobj1, myobj2`:  
     `import m.mymodule: myobj1, myobj2`
-    - `from "../folder/file.jl" import mymodule.myobj1, mymodule.myobj2`:  
+    - `from "folder/file.jl" import mymodule.myobj1, mymodule.myobj2`:  
     `import m.mymodule.myobj1, m.mymodule.myobj2`
-    - `from "../folder/file.jl" using mymodule1, mymodule2`:  
+    - `from "folder/file.jl" using mymodule1, mymodule2`:  
     `using m.mymodule1, m.mymodule2`
-    - `from "../folder/file.jl" using mymodule: myobj1, myobj2`:  
+    - `from "folder/file.jl" using mymodule: myobj1, myobj2`:  
     `using m.mymodule: myobj1, myobj2`
+    
+Wrapping each file into a module is essentially necessary to isolate the contents of each file; however this is an implementation detail not exposed to users.
 
 ## Alternate proposals
 
@@ -57,18 +80,20 @@ One proposal was to use `import "../folder/file.jl"`, and to expect and require 
 - It does not mesh as well with current Julia, which allows for multiple modules in a file.
 - It requires defining a module of the same name as the file, which is a small amount of extra overhead.
 
+One proposal was to use the syntax `import "../folder/file.jl": myobj1, myobj2`. However this make it seem like `import "../folder/file.jl"` should also be valid, which it is not. (As we don't want to enforce a file<->module equivalence.)
+
 One proposal was to to use the syntax `import .file` or `import ..file`. However this has ambiguity issues, as the same syntax can be used to `import` modules in the same file. (Given the right module structure at the point it is invoked.)
 
-One proposal was to try and hook this into the existing package loading mechanism. Doing so via a project environment introduces substantial extra boilerplate. Doing so via an implicit environment lacks the required expressivity, as this looks at the file system for `X/src/X.jl`, and is therefore constrained to expressing trees (which is what file systems are), as opposed to DAGs (which is what general dependency structures are).
+For the above reasons, introducing an additional keyword was seen as the neatest approach.
+
+One proposal was to try and hook into the existing package loading mechanism, using that to lookup symbols into paths. However doing so may have ambiguity issues as above, and would introduce substantial extra boilerplate in the form of `Project.toml`/`Manifest.toml` files potentially in every subfolder.
 
 One proposal was to use `import "file.jl"` as a shortcut for `include("file.jl"); import .file`. However this does not offer a meaningful improvement in functionality, and in particular does not solve the problems identified at the start.
 
-One proposal was to demand that the filesystem lookup should be done relative to the source root of the package, or pwd in the case of `Main`. However this means that each file implicitly depends upon the entire structure of the rest of the package, which is unnecessary.
+One proposal was to demand that the filesystem lookup should be done relative to the source root of the package, or pwd in the case of `Main`. (Rather than relative to the file in which the `from` statement is located.) However this means that each file now has nonlocal dependency, on the entire structure of the rest of the package; for example this makes moving whole folders of files much harder.
 
-One proposal was to ignore the source file's location and use the current module's name to perform lookup wrt the source root of the package; i.e. to look in `src/B/D.jl` when encountering `import "D.jl"` within the module `B`. However this lacks the required expressivity, as it can only express trees, not DAGs.
+One proposal was to ignore the source file's location and use the current module's name to perform lookup wrt the source root of the package; i.e. to look in `src/B/D.jl` when encountering `from "D.jl" import ...` within the module `B`. However this lacks the required expressivity, as it can only express trees, not DAGs.
 
-One proposal was to locate things in `Base.__toplevel__` rather than `PackageName.__toplevel__`. However this doesn't play well with static compilation.
+One proposal was to locate things in `Packagename.__toplevel__` (or some other name like `PackageName.__imports__`), rather than just in `PackageName`. However this doesn't work with precompilation of packages, which produce errors due to the `__toplevel__` module already being closed. _This does mean that we don't pollute the main package namespaces, as is done at present, though. A way to have this work would be desirable._
 
-One proposal was to use the syntax `import "../folder/file.jl": myobj1, myobj2`. However this make it seem like `import "../folder/file.jl"` should also be valid, which it is not. (As we don't want to enforce a file<->module equivalence.)
-
-One proposal was to use the syntax `from ..folder.file import myobj1, myobj2`. However the current syntax better supports getting the file from an arbitrary URI.
+One proposal was to use the syntax `from ..folder.file import myobj1, myobj2`. However the current syntax better supports getting the file from an arbitrary URI. _For example a proposed extension was to accept URLs, if there is interest in this in the future._
