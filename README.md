@@ -28,8 +28,10 @@ Using `@from` to access a file multiple times (for example calling `@from "file.
 Files (as distinct from modules and packages) naturally exhibit a dependency structure. Getting access to one file from another currently relies on using `include`, usually in some "parent" file.
 
 This has two major issues:
-- The dependency structure between files is not made explicit;
-- topologically sorting the dependency structure (to determine `include` order) is a burden placed upon the developer.
+- The dependency structure between files is not made explicit.
+- Topologically sorting the dependency structure (to determine `include` order) is a burden placed upon the developer.
+
+It addition, it also often necessitates an unnecessarily verbose `include("file_containing_mymodule.jl"); import MyModule`. _(Which seems to be what initially prompted this issue.)_
 
 ## Solution
 
@@ -86,14 +88,14 @@ One proposal was to to use the syntax `import .file` or `import ..file`. However
 
 For the above reasons, introducing an additional keyword was seen as the neatest approach.
 
+One proposal was to locate things in `Packagename.__toplevel__` (or some other name like `PackageName.__imports__`), rather than just in `PackageName`. However this doesn't work with precompilation of packages, which produce errors due to the `__toplevel__` module already being closed. _This would mean that we don't pollute the main package namespace, though, so a way to have this work would be desirable._
+
+One proposal was to use the syntax `from ..folder.file import myobj1, myobj2`. However the current syntax better supports getting the file from an arbitrary URI. _For example a proposed extension was to accept URLs, if there is interest in this in the future._
+
 One proposal was to try and hook into the existing package loading mechanism, using that to lookup symbols into paths. However doing so may have ambiguity issues as above, and would introduce substantial extra boilerplate in the form of `Project.toml`/`Manifest.toml` files potentially in every subfolder.
 
-One proposal was to use `import "file.jl"` as a shortcut for `include("file.jl"); import .file`. However this does not offer a meaningful improvement in functionality, and in particular does not solve the problems identified at the start.
+One proposal was to use `import "file.jl"` as a shortcut for `include("file.jl"); import .file`. However this does not offer a meaningful improvement in functionality, and in particular does not solve the two main problems identified at the start.
 
 One proposal was to demand that the filesystem lookup should be done relative to the source root of the package, or pwd in the case of `Main`. (Rather than relative to the file in which the `from` statement is located.) However this means that each file now has nonlocal dependency, on the entire structure of the rest of the package; for example this makes moving whole folders of files much harder.
 
 One proposal was to ignore the source file's location and use the current module's name to perform lookup wrt the source root of the package; i.e. to look in `src/B/D.jl` when encountering `from "D.jl" import ...` within the module `B`. However this lacks the required expressivity, as it can only express trees, not DAGs.
-
-One proposal was to locate things in `Packagename.__toplevel__` (or some other name like `PackageName.__imports__`), rather than just in `PackageName`. However this doesn't work with precompilation of packages, which produce errors due to the `__toplevel__` module already being closed. _This does mean that we don't pollute the main package namespaces, as is done at present, though. A way to have this work would be desirable._
-
-One proposal was to use the syntax `from ..folder.file import myobj1, myobj2`. However the current syntax better supports getting the file from an arbitrary URI. _For example a proposed extension was to accept URLs, if there is interest in this in the future._
