@@ -1,8 +1,17 @@
 # FromFile.jl
 
-This is a macro-based implementation of the specification detailed below, for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600). This package exports the macro `@from` which can be used in place of the keyword `from` proposed in the specification.
+This package exports a macro `@from`, which can be used to import objects from files.
 
-## Package usage
+Technically this is a draft implementation of the specification below, for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600).
+
+The hope is that you will never have to write `include` again.
+
+## Installation
+```
+] add FromFile
+```
+
+## Usage
 
 Objects in other files may be imported in the following way:
 
@@ -22,7 +31,11 @@ The usual import syntax is supported; the only difference is that the objects ar
 
 Using `@from` to access a file multiple times (for example calling `@from "file.jl" import foo` in multiple files) will access the same objects each time; i.e. without the duplication issues that `include("file.jl")` would introduce.
 
+---
+
 # Specification
+
+Also see [Issue 4600](https://github.com/JuliaLang/julia/issues/4600) for the ongoing discussion on this topic.
 
 ## Problem
 Files (as distinct from modules and packages) naturally exhibit a dependency structure. Getting access to one file from another currently relies on using `include`, usually in some "parent" file.
