@@ -33,3 +33,27 @@ Using `@from` to access a file multiple times (for example calling `@from "file.
 ## Specification
 
 FromFile.jl is a draft implementation of [this specification](./SPECIFICATION.md), for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600).
+
+## Tips
+
+When porting a project to use `FromFile`, it can be a bit daunting to figure out the inheritance of different objects. This is because in Julia, one doesn't need to specify which object comes from which file. To print out which file defines which object, you can execute the bash snippet at the root of your project:
+
+```bash
+for f in **/*.jl; do
+    echo $f && \
+    cat $f | vim - -nes \
+        -c '%s/#.*//ge' \
+        -c '%s/"""\_.\{-}"""//ge' \
+        -c '%v/^\S\+/exe "norm dd"' \
+        -c '%g/^\(end\|@from\|using\|export\)/exe "norm dd"' \
+        -c '%g/.*/exe "norm >>"' \
+        -c ':%p' -c ':q!' | tail -n +2
+done | less
+```
+
+(1. Print filename, 2. Print the file and use vim to edit the stream (made via vim-stream), 3. Delete comments, 4. Delete multi-line comments
+5. Delete everything except unindented code lines,
+6. Scrub irrelevant lines like `end`, `@from`, etc.,
+7. Indent code,
+8. Print)
+
