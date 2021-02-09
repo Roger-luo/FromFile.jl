@@ -45,7 +45,7 @@ for f in **/*.jl; do
         -c '%s/#.*//ge' \
         -c '%s/"""\_.\{-}"""//ge' \
         -c '%v/^\S\+/exe "norm dd"' \
-        -c '%g/^\(end\|@from\|using\|export\)/exe "norm dd"' \
+        -c '%g/^\(end\>\|@from\>\|using\>\|export\>\|import\>\)/exe "norm dd"' \
         -c '%g/.*/exe "norm >>"' \
         -c ':%p' -c ':q!' | tail -n +2
 done | less
