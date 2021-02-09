@@ -32,4 +32,4 @@ Using `@from` to access a file multiple times (for example calling `@from "file.
 
 ## Specification
 
-Technically this is a draft implementation of [this specification](./SPECIFICATION.md), for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600).
+Technically FromFile.jl is a draft implementation of [this specification](./SPECIFICATION.md), for improving import systems as discussed in [Issue 4600](https://github.com/JuliaLang/julia/issues/4600).
