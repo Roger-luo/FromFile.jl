@@ -16,7 +16,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
     # module loads it, unless specified as absolute
     # path or the module is created interactively
     if startswith(path, "https://") || startswith(path, "https://")
-        path = download(path)
+        path = download(path, tempname() * basename(path))
     elseif !isabspath(path) && basepath != ""
         path = joinpath(basepath, path)
     else
