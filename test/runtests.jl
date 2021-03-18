@@ -89,6 +89,15 @@ module wrapper11
 	
     @from "basic.jl" using A, C
 end
+module wrapper12
+	using FromFile
+	visible = [:foo, :quux, :A, :B, :C]
+	invisible = [:bar, :baz]
+
+	var"basic.jl" = 123
+
+    @from "basic.jl" using A, C
+end
 
 module wrapper_chain
 	using FromFile
@@ -106,7 +115,7 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12)
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
 		end
@@ -117,12 +126,12 @@ end
 	
 	# Make sure that the import modules are where we expect them to be
 	project_path = dirname(dirname(pathof(FromFile)))
-	file_symbol = Symbol(abspath(joinpath(project_path, "test", "basic.jl")))
+	file_symbol = Symbol("##", abspath(joinpath(project_path, "test", "basic.jl")))
 	@test fullname(wrapper1.A) == (:Main, file_symbol, :A)
 
 	# Check we get the same thing every time
 	visible_dict = Dict{Symbol, Array}()
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12)
 		for visible_symbol in wrapper.visible
 			if !haskey(visible_dict, visible_symbol)
 				visible_dict[visible_symbol] = []
