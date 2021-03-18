@@ -100,7 +100,7 @@ module wrapper_url
 	visible = [:A]
 	invisible = [:foo, :bar, :baz, :quux, :B, :C]
 
-	@from "https://cdn.jsdelivr.net/gh/Roger-luo/FromFile.jl@ba3d96b/test/basic.jl" import A
+	@from "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/ba3d96b57585a5710579d3d1f18729f06f5087e5/test/basic.jl" import A
 end
 
 @testset "Tests from REPL" begin
