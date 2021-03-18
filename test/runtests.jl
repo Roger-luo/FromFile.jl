@@ -90,6 +90,18 @@ module wrapper11
     @from "basic.jl" using A, C
 end
 
+module wrapper12
+	using FromFile
+	visible = [:foo, :A, :B, :baz, :C]
+	invisible = [:bar, :quux]
+	
+    @from "basic.jl" begin
+		using A
+		import A.B: baz
+		import C
+	end
+end
+
 module wrapper_chain
 	using FromFile
 	@from "chain.jl" import a, b, b2, c, c2, d, e
