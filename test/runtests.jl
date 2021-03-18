@@ -95,6 +95,14 @@ module wrapper_chain
 	@from "chain.jl" import a, b, b2, c, c2, d, e
 end
 
+module wrapper_url
+	using FromFile
+	visible = [:A]
+	invisible = [:foo, :bar, :baz, :quux, :B, :C]
+
+	@from "https://cdn.jsdelivr.net/gh/Roger-luo/FromFile.jl@ba3d96b/test/basic.jl" import A
+end
+
 @testset "Tests from REPL" begin
 	# Make sure that we're not affecting this namespace
 	@test !isdefined(@__MODULE__, :A)
@@ -106,7 +114,7 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper_url)
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
 		end
