@@ -118,7 +118,8 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	wrappers = (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12)
+	for wrapper in wrappers
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
 		end
@@ -134,7 +135,7 @@ end
 
 	# Check we get the same thing every time
 	visible_dict = Dict{Symbol, Array}()
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	for wrapper in wrappers
 		for visible_symbol in wrapper.visible
 			if !haskey(visible_dict, visible_symbol)
 				visible_dict[visible_symbol] = []
