@@ -24,9 +24,9 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
     loading = Expr(ex.head)
     
     if root === Main
-        file_module_sym = Symbol(path)
+        file_module_sym = Symbol("##", path)
     else
-        file_module_sym = Symbol(relpath(path, pathof(root)))
+        file_module_sym = Symbol("##", relpath(path, pathof(root)))
     end
 
     if isdefined(root, file_module_sym)
