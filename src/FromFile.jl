@@ -21,7 +21,9 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     # file path should always be relative to the
     # module loads it, unless specified as absolute
     # path or the module is created interactively
-    if !isabspath(path) && basepath != ""
+    if startswith(path, "https://") || startswith(path, "http://")
+        path = download(path, tempname() * basename(path))
+    elseif !isabspath(path) && basepath != ""
         path = joinpath(basepath, path)
     else
         path = abspath(path)
