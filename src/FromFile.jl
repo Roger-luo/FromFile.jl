@@ -6,8 +6,14 @@ macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
 
-function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
-    ex.head === :using || ex.head === :import || error("expect using/import statement")
+function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
+    import_exs = if root_ex.head === :block
+        filter(ex -> !(ex isa LineNumberNode), root_ex.args)
+    else
+        [root_ex]
+    end
+    
+    all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
 	
 	root = Base.moduleroot(m)
 	basepath = dirname(String(s.file))
@@ -23,7 +29,6 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
         path = abspath(path)
     end
 	
-    loading = Expr(ex.head)
     
     if root === Main
         file_module_sym = Symbol(path)
@@ -37,20 +42,24 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
         file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
     end
 
-    for each in ex.args
-        each isa Expr || continue
+    return Expr(:block, map(import_exs) do ex
+        loading = Expr(ex.head)
 
-        if each.head === :(:) # using/import A: a, b, c
-            each.args[1].args[1] === :(.) && error("cannot load relative module from file")
-            push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., each.args[1].args...), each.args[2:end]...) )
-        elseif each.head === :(.) # using/import A, B.C
-            each.args[1] === :(.) && error("cannot load relative module from file")
-            push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
-        else
-            error("invalid syntax $ex")
+        for each in ex.args
+            each isa Expr || continue
+
+            if each.head === :(:) # using/import A: a, b, c
+                each.args[1].args[1] === :(.) && error("cannot load relative module from file")
+                push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., each.args[1].args...), each.args[2:end]...) )
+            elseif each.head === :(.) # using/import A, B.C
+                each.args[1] === :(.) && error("cannot load relative module from file")
+                push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
+            else
+                error("invalid syntax $ex")
+            end
         end
-    end
-    return loading
+        return loading
+    end...)
 end
 
 end

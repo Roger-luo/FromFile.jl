@@ -90,6 +90,18 @@ module wrapper11
     @from "basic.jl" using A, C
 end
 
+module wrapper12
+	using FromFile
+	visible = [:foo, :A, :B, :baz, :C]
+	invisible = [:bar, :quux]
+	
+    @from "basic.jl" begin
+		using A
+		import A.B: baz
+		import C
+	end
+end
+
 module wrapper_chain
 	using FromFile
 	@from "chain.jl" import a, b, b2, c, c2, d, e
@@ -114,7 +126,8 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper_url)
+	wrappers = (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper_url)
+	for wrapper in wrappers
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
 		end
@@ -130,7 +143,7 @@ end
 
 	# Check we get the same thing every time
 	visible_dict = Dict{Symbol, Array}()
-	for wrapper in (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11)
+	for wrapper in wrappers
 		for visible_symbol in wrapper.visible
 			if !haskey(visible_dict, visible_symbol)
 				visible_dict[visible_symbol] = []
