@@ -1,23 +1,27 @@
 module FromFile
 
-export @from
+export @from, @reexport_from
+
+macro reexport_from(path::String, ex::Expr)
+    esc(from_m(__module__, __source__, path, ex, true))
+end
 
 macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
 
-function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
+function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr, reexport::Bool = false)
     import_exs = if root_ex.head === :block
         filter(ex -> !(ex isa LineNumberNode), root_ex.args)
     else
         [root_ex]
     end
-    
+
     all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
-	
+
 	root = Base.moduleroot(m)
 	basepath = dirname(String(s.file))
-	
+
     # file path should always be relative to the
     # module loads it, unless specified as absolute
     # path or the module is created interactively
@@ -26,8 +30,8 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     else
         path = abspath(path)
     end
-	
-    
+
+
     if root === Main
         file_module_sym = Symbol(path)
     else
@@ -42,6 +46,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
 
     return Expr(:block, map(import_exs) do ex
         loading = Expr(ex.head)
+        exporting = Expr(:export)
 
         for each in ex.args
             each isa Expr || continue
@@ -49,14 +54,19 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
             if each.head === :(:) # using/import A: a, b, c
                 each.args[1].args[1] === :(.) && error("cannot load relative module from file")
                 push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., each.args[1].args...), each.args[2:end]...) )
+                exported_names = each.args[2:end]
             elseif each.head === :(.) # using/import A, B.C
                 each.args[1] === :(.) && error("cannot load relative module from file")
                 push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
+                exported_names = each.args
             else
                 error("invalid syntax $ex")
             end
+
+            reexport && push!(exporting.args, exported_names...)
         end
-        return loading
+
+        return reexport ? Expr(:block, loading, exporting) : loading
     end...)
 end
 
