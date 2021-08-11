@@ -14,18 +14,17 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     end
     
     all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
-	
-	root = Base.moduleroot(m)
-	basepath = dirname(String(s.file))
-	
+
+    root = Base.moduleroot(m)
+    basepath = dirname(String(s.file))
+
     # file path should always be relative to the
     # module loads it, unless specified as absolute
     # path or the module is created interactively
     if !isabspath(path) && basepath != ""
         path = joinpath(basepath, path)
-    else
-        path = abspath(path)
     end
+    path = abspath(path)
 	
     
     if root === Main
