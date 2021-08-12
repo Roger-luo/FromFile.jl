@@ -1,7 +1,13 @@
 name = "FromFile"
 uuid = "ff7dd447-1dcb-4ce3-b8ac-22a812192de7"
 authors = ["Roger Luo <rogerluo.rl18@gmail.com> and Patrick Kidger <contact@kidger.site>"]
-version = "0.1.0"
+version = "0.1.1"
+
+[deps]
 
 [compat]
 julia = "1.5"
+
+[extras]
+
+[targets]
