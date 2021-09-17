@@ -4,10 +4,7 @@ authors = ["Roger Luo <rogerluo.rl18@gmail.com> and Patrick Kidger <contact@kidg
 version = "0.1.1"
 
 [deps]
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [compat]
 julia = "1.5"
-
-[extras]
-
-[targets]
