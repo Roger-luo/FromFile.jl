@@ -36,7 +36,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     if isdefined(root, file_module_sym)
         file_module = getfield(root, file_module_sym)
     else
-        file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
+        file_module = Base.eval(root, :(module $(file_module_sym); using Revise; includet($path); end))
     end
 
     return Expr(:block, map(import_exs) do ex
