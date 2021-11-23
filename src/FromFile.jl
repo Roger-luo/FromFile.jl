@@ -6,8 +6,12 @@ macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
 
-function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
-    ex.head === :using || ex.head === :import || error("expect using/import statement")
+macro from(path::String)
+    esc(from_m(__module__, __source__, path)) 
+end
+
+function from_m(m::Module, s::LineNumberNode, path::String, ex::Union{Expr,Nothing}=nothing)
+    ex === nothing || ex.head === :using || ex.head === :import || error("expect using/import statement")
 	
 	root = Base.moduleroot(m)
 	basepath = dirname(String(s.file))
@@ -20,8 +24,6 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
     else
         path = abspath(path)
     end
-	
-    loading = Expr(ex.head)
     
     if root === Main
         file_module_sym = Symbol(path)
@@ -34,6 +36,12 @@ function from_m(m::Module, s::LineNumberNode, path::String, ex::Expr)
     else
         file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
     end
+	
+    if ex === nothing
+        return
+    end
+    
+    loading = Expr(ex.head)
 
     for each in ex.args
         each isa Expr || continue
