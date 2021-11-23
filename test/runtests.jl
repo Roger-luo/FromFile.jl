@@ -102,6 +102,21 @@ module wrapper12
 	end
 end
 
+
+module wrapper_without_import
+	# https://github.com/Roger-luo/FromFile.jl/issues/24
+	using FromFile
+
+	test1 = !isdefined(Main, :hello_from_sideeffect)
+	@from "sideeffect.jl"
+	test2 = isdefined(Main, :hello_from_sideeffect)
+
+	last_value = Main.hello_from_sideeffect
+	@from "sideeffect.jl"
+	test3 = Main.hello_from_sideeffect == last_value
+end
+
+
 module wrapper_chain
 	using FromFile
 	@from "chain.jl" import a, b, b2, c, c2, d, e
@@ -165,4 +180,9 @@ end
 	@test FromFileTestPack.int_cube(my_int).value == 27
 	@test FromFileTestPack.int_unwrap(my_int) == 3
 	@test FromFileTestPack.int_square_unwrap(my_int) == 9
+	
+	# Check that @from works without import statement
+	@test wrapper_without_import.test1
+	@test wrapper_without_import.test2
+	@test wrapper_without_import.test3
 end

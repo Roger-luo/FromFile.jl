@@ -6,6 +6,10 @@ macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
 
+macro from(path::String)
+    esc(from_m(__module__, __source__, path, Expr(:block))) 
+end
+
 function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     import_exs = if root_ex.head === :block
         filter(ex -> !(ex isa LineNumberNode), root_ex.args)
