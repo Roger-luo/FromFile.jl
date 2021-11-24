@@ -6,7 +6,7 @@ The hope is that you will never have to write `include` again.
 
 ## Installation
 ```
-] add FromFile
+pkg> add FromFile
 ```
 
 ## Usage
