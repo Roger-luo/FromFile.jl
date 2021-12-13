@@ -15,7 +15,7 @@ Objects in other files may be imported in the following way:
 
 ```julia
 # file1.jl
-using FromFile
+import FromFile: @from
 @from "file2.jl" import foo
 
 bar() = foo()
