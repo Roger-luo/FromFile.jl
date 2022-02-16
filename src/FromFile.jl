@@ -2,6 +2,14 @@ module FromFile
 
 export @from
 
+using Requires
+
+track(mod, path) = nothing
+
+function __init__()
+    @require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" track(mod, path) = Revise.track(mod, path)
+end
+
 macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
@@ -16,7 +24,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     else
         [root_ex]
     end
-    
+
     all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
 
     root = Base.moduleroot(m)
@@ -29,8 +37,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
         path = joinpath(basepath, path)
     end
     path = abspath(path)
-	
-    
+
     if root === Main
         file_module_sym = Symbol(path)
     else
@@ -41,6 +48,9 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
         file_module = getfield(root, file_module_sym)
     else
         file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
+
+        # In interactive sessions, track generated module using Revise.jl if Revise has been loaded
+        isinteractive() && track(file_module, path)
     end
 
     return Expr(:block, map(import_exs) do ex
