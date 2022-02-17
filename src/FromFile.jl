@@ -6,6 +6,8 @@ using Requires
 
 track(mod, path) = nothing
 
+track_modules() = isinteractive()
+
 function __init__()
     @require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" track(mod, path) = Revise.track(mod, path)
 end
@@ -50,7 +52,7 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
         file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
 
         # In interactive sessions, track generated module using Revise.jl if Revise has been loaded
-        isinteractive() && track(file_module, path)
+        track_modules() && track(file_module, path)
     end
 
     return Expr(:block, map(import_exs) do ex
