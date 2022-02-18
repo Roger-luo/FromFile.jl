@@ -1,4 +1,5 @@
-push!(LOAD_PATH, @__DIR__)
+import Pkg
+Pkg.develop(path = joinpath(@__DIR__, "FromFileTestPack"))
 
 import Revise
 import FromFile
@@ -197,10 +198,10 @@ end
 
 @testset "Revise Tests" begin
 	subfile = "revise/subfile.jl"
-	subfile_bak = "revise/subfile.jl.bak"
 	subfile_revised = "revise/subfile_revised.jl"
-	cp(subfile, subfile_bak; force = true)
+	subfile_bak = tempname()
 	try
+		cp(subfile, subfile_bak; force = true)
 		@test wrapper_revise.parent.g1() == 1
 		@test wrapper_revise.parent.g2() == 4
 		@test !isdefined(wrapper_revise.parent.child, :f3) # method `subfile.f3` not defined yet
@@ -213,6 +214,5 @@ end
 		@test wrapper_revise.parent.g3() == 9
 	finally
 		cp(subfile_bak, subfile; force = true)
-		rm(subfile_bak; force = true)
 	end
 end
