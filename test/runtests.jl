@@ -1,3 +1,7 @@
+import Pkg
+Pkg.develop(path = joinpath(@__DIR__, "FromFileTestPack"))
+
+import Revise
 import FromFile
 import FromFileTestPack
 using Test
@@ -102,7 +106,6 @@ module wrapper12
 	end
 end
 
-
 module wrapper_without_import
 	# https://github.com/Roger-luo/FromFile.jl/issues/24
 	using FromFile
@@ -116,10 +119,16 @@ module wrapper_without_import
 	test3 = Main.hello_from_sideeffect == last_value
 end
 
-
 module wrapper_chain
 	using FromFile
 	@from "chain.jl" import a, b, b2, c, c2, d, e
+end
+
+module wrapper_revise
+	using FromFile
+	FromFile.track_modules() = true # force module tracking, even if running tests non-interactively
+	@from "revise.jl" import parent
+	FromFile.track_modules() = isinteractive()
 end
 
 @testset "Tests from REPL" begin
@@ -185,4 +194,25 @@ end
 	@test wrapper_without_import.test1
 	@test wrapper_without_import.test2
 	@test wrapper_without_import.test3
+end
+
+@testset "Revise Tests" begin
+	subfile = "revise/subfile.jl"
+	subfile_revised = "revise/subfile_revised.jl"
+	subfile_bak = tempname()
+	try
+		cp(subfile, subfile_bak; force = true)
+		@test wrapper_revise.parent.g1() == 1
+		@test wrapper_revise.parent.g2() == 4
+		@test !isdefined(wrapper_revise.parent.child, :f3) # method `subfile.f3` not defined yet
+
+		cp(subfile_revised, subfile; force = true)
+		Revise.revise()
+
+		@test wrapper_revise.parent.g1() == "oneone"
+		@test isempty(methods(wrapper_revise.parent.child.f2)) # method `subfile.f2` is deleted
+		@test wrapper_revise.parent.g3() == 9
+	finally
+		cp(subfile_bak, subfile; force = true)
+	end
 end
