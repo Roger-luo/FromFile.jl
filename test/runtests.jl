@@ -106,6 +106,14 @@ module wrapper12
 	end
 end
 
+module wrapper13
+	using FromFile
+	visible = [:D]
+	invisible = [:foo, :bar, :baz, :quux, :A, :B, :C]
+
+	@from "basic.jl" import A as D
+end
+
 module wrapper_without_import
 	# https://github.com/Roger-luo/FromFile.jl/issues/24
 	using FromFile
@@ -142,7 +150,10 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	wrappers = (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12)
+	wrappers = (
+		wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7,
+		wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper13
+	)
 	for wrapper in wrappers
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
