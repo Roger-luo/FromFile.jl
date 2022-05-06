@@ -60,20 +60,15 @@ function eval_quoted_string_expr(m::Module, str)
 end
 
 function from_remote_file(m::Module, s::LineNumberNode, url::String, root_ex::Expr)
-    path = Downloads.download(url)
+    root = Base.moduleroot(m)
     file_module_sym = Symbol(url)
-    return from_local_file(m, s, path, root_ex, file_module_sym)
+    file_module = lazy_load_file(root, file_module_sym) do
+        Downloads.download(url) 
+    end
+    return load_symbols_from_file(file_module, file_module_sym, parse_import_stmts(root_ex))
 end
 
-function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Expr, file_module_sym = nothing)
-    import_exs = if root_ex.head === :block
-        filter(ex -> !(ex isa LineNumberNode), root_ex.args)
-    else
-        [root_ex]
-    end
-
-    all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
-
+function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     root = Base.moduleroot(m)
     basepath = dirname(String(s.file))
 
@@ -85,21 +80,44 @@ function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Ex
     end
     path = abspath(path)
 
-    isnothing(file_module_sym) && if root === Main
+    if root === Main
         file_module_sym = Symbol(path)
     else
         file_module_sym = Symbol(relpath(path, pathof(root)))
     end
 
+    file_module = lazy_load_file(path, root, file_module_sym)
+    return load_symbols_from_file(file_module, file_module_sym, parse_import_stmts(root_ex))
+end
+
+function parse_import_stmts(root_ex::Expr)
+    import_exs = if root_ex.head === :block
+        filter(ex -> !(ex isa LineNumberNode), root_ex.args)
+    else
+        [root_ex]
+    end
+
+    all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
+    return import_exs
+end
+
+function lazy_load_file(path::String, root::Module, file_module_sym::Symbol)
+    return lazy_load_file(()->path, root, file_module_sym)
+end
+
+function lazy_load_file(f, root::Module, file_module_sym::Symbol)
     if isdefined(root, file_module_sym)
         file_module = getfield(root, file_module_sym)
     else
+        path = f()
         file_module = Base.eval(root, :(module $(file_module_sym); include($path); end))
-
         # In interactive sessions, track generated module using Revise.jl if Revise has been loaded
         track_modules() && track(file_module, path)
     end
+    return file_module
+end
 
+function load_symbols_from_file(file_module::Module, file_module_sym::Symbol, @nospecialize(import_exs))
     ret = Expr(:block)
     for ex in import_exs
         loading = Expr(ex.head)
