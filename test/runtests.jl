@@ -106,17 +106,16 @@ module wrapper12
 	end
 end
 
-if VERSION ≥ v"1.6" # as is not available in old Julia version
-
 module wrapper13
-	using FromFile
+using FromFile
+@static if VERSION ≥ v"1.6" # as is not available in old Julia version
 	visible = [:D]
 	invisible = [:foo, :bar, :baz, :quux, :A, :B, :C]
 
 	@from "basic.jl" import A as D
-end
-
 end # VERSION ≥ v"1.6"
+
+end
 
 module wrapper_without_import
 	# https://github.com/Roger-luo/FromFile.jl/issues/24
