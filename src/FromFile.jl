@@ -35,12 +35,7 @@ function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
     if isurl(path_or_url)
         from_remote_file(m, s, path_or_url, root_ex)
     else
-        if m === Main
-            file_module_sym = Symbol(path)
-        else
-            file_module_sym = Symbol(relpath(path, pathof(m)))
-        end
-        from_local_file(m, s, path_or_url, root_ex, file_module_sym)
+        from_local_file(m, s, path_or_url, root_ex)
     end
 end
 
@@ -55,7 +50,7 @@ function from_remote_file(m::Module, s::LineNumberNode, url::String, root_ex::Ex
     return from_local_file(m, s, path, root_ex, file_module_sym)
 end
 
-function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Expr, file_module_sym::Symbol)
+function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Expr, file_module_sym = nothing)
     import_exs = if root_ex.head === :block
         filter(ex -> !(ex isa LineNumberNode), root_ex.args)
     else
@@ -74,6 +69,12 @@ function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Ex
         path = joinpath(basepath, path)
     end
     path = abspath(path)
+
+    isnothing(file_module_sym) && if root === Main
+        file_module_sym = Symbol(path)
+    else
+        file_module_sym = Symbol(relpath(path, pathof(root)))
+    end
 
     if isdefined(root, file_module_sym)
         file_module = getfield(root, file_module_sym)
