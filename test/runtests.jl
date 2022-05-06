@@ -106,6 +106,8 @@ module wrapper12
 	end
 end
 
+if VERSION ≥ v"1.6" # as is not available in old Julia version
+
 module wrapper13
 	using FromFile
 	visible = [:D]
@@ -113,6 +115,8 @@ module wrapper13
 
 	@from "basic.jl" import A as D
 end
+
+end # VERSION ≥ v"1.6"
 
 module wrapper_without_import
 	# https://github.com/Roger-luo/FromFile.jl/issues/24
