@@ -38,7 +38,7 @@ function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
         if m === Main
             file_module_sym = Symbol(path)
         else
-            file_module_sym = Symbol(relpath(path, pathof(root)))
+            file_module_sym = Symbol(relpath(path, pathof(m)))
         end
         from_local_file(m, s, path_or_url, root_ex, file_module_sym)
     end
