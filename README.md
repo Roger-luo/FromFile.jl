@@ -5,8 +5,20 @@ This package exports a macro `@from`, which can be used to import objects from f
 The hope is that you will never have to write `include` again.
 
 ## Installation
+
+<p>
+FromFile is a &nbsp;
+    <a href="https://julialang.org">
+        <img src="https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia.ico" width="16em">
+        Julia Language
+    </a>
+    &nbsp; package. To install FromFile,
+    please <a href="https://docs.julialang.org/en/v1/manual/getting-started/">open
+    Julia's interactive session (known as REPL)</a> and press <kbd>]</kbd> key in the REPL to use the package mode, then type the following command
+</p>
+
 ```
-] add FromFile
+pkg> add FromFile
 ```
 
 ## Usage
@@ -15,7 +27,7 @@ Objects in other files may be imported in the following way:
 
 ```julia
 # file1.jl
-using FromFile
+import FromFile: @from
 @from "file2.jl" import foo
 
 bar() = foo()

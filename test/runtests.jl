@@ -1,3 +1,7 @@
+import Pkg
+Pkg.develop(path = joinpath(@__DIR__, "FromFileTestPack"))
+
+import Revise
 import FromFile
 import FromFileTestPack
 using Test
@@ -102,6 +106,31 @@ module wrapper12
 	end
 end
 
+if VERSION ≥ v"1.6" # as is not available in old Julia version
+
+module wrapper13
+	using FromFile
+	visible = [:D]
+	invisible = [:foo, :bar, :baz, :quux, :A, :B, :C]
+
+	@from "basic.jl" import A as D
+end
+
+end # VERSION ≥ v"1.6"
+
+module wrapper_without_import
+	# https://github.com/Roger-luo/FromFile.jl/issues/24
+	using FromFile
+
+	test1 = !isdefined(Main, :hello_from_sideeffect)
+	@from "sideeffect.jl"
+	test2 = isdefined(Main, :hello_from_sideeffect)
+
+	last_value = Main.hello_from_sideeffect
+	@from "sideeffect.jl"
+	test3 = Main.hello_from_sideeffect == last_value
+end
+
 module wrapper_chain
 	using FromFile
 	@from "chain.jl" import a, b, b2, c, c2, d, e
@@ -115,6 +144,13 @@ module wrapper_url
 	@from "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/ba3d96b57585a5710579d3d1f18729f06f5087e5/test/basic.jl" import A
 end
 
+module wrapper_revise
+	using FromFile
+	FromFile.track_modules() = true # force module tracking, even if running tests non-interactively
+	@from "revise.jl" import parent
+	FromFile.track_modules() = isinteractive()
+end
+
 @testset "Tests from REPL" begin
 	# Make sure that we're not affecting this namespace
 	@test !isdefined(@__MODULE__, :A)
@@ -126,7 +162,12 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
-	wrappers = (wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7, wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper_url)
+
+	wrappers = (
+		wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7,
+		wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper13, wrapper_url
+	)
+
 	for wrapper in wrappers
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
@@ -173,4 +214,30 @@ end
 	@test FromFileTestPack.int_cube(my_int).value == 27
 	@test FromFileTestPack.int_unwrap(my_int) == 3
 	@test FromFileTestPack.int_square_unwrap(my_int) == 9
+	
+	# Check that @from works without import statement
+	@test wrapper_without_import.test1
+	@test wrapper_without_import.test2
+	@test wrapper_without_import.test3
+end
+
+@testset "Revise Tests" begin
+	subfile = "revise/subfile.jl"
+	subfile_revised = "revise/subfile_revised.jl"
+	subfile_bak = tempname()
+	try
+		cp(subfile, subfile_bak; force = true)
+		@test wrapper_revise.parent.g1() == 1
+		@test wrapper_revise.parent.g2() == 4
+		@test !isdefined(wrapper_revise.parent.child, :f3) # method `subfile.f3` not defined yet
+
+		cp(subfile_revised, subfile; force = true)
+		Revise.revise()
+
+		@test wrapper_revise.parent.g1() == "oneone"
+		@test isempty(methods(wrapper_revise.parent.child.f2)) # method `subfile.f2` is deleted
+		@test wrapper_revise.parent.g3() == 9
+	finally
+		cp(subfile_bak, subfile; force = true)
+	end
 end
