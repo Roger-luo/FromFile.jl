@@ -1,6 +1,6 @@
 module FromFile
 
-export @from
+export @from, @from_url
 
 using Requires
 using Downloads
@@ -18,7 +18,15 @@ macro from(path, ex::Expr)
 end
 
 macro from(path)
-    esc(from_m(__module__, __source__, path, Expr(:block))) 
+    esc(from_m(__module__, __source__, path))
+end
+
+macro from_url(path, ex::Expr)
+    esc(from_url_m(__module__, __source__, path, ex))
+end
+
+macro from_url(path)
+    esc(from_url_m(__module__, __source__, path))
 end
 
 # NOTE: we'd like to keep this pacakge minimal deps
@@ -30,13 +38,15 @@ function isurl(str::AbstractString)
     return !occursin(windowsregex, str) && occursin(urlregex, str)
 end
 
-function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
-    path_or_url = eval_quoted_string_expr(m, path_or_url)
-    if isurl(path_or_url)
-        from_remote_file(m, s, path_or_url, root_ex)
-    else
-        from_local_file(m, s, path_or_url, root_ex)
-    end
+function from_m(m::Module, s::LineNumberNode, path, root_ex::Expr = Expr(:block))
+    path = eval_quoted_string_expr(m, path)
+    return from_local_file(m, s, path, root_ex)
+end
+
+function from_url_m(m::Module, s::LineNumberNode, url, root_ex::Expr = Expr(:block))
+    url = eval_quoted_string_expr(m, url)
+    isurl(url) || throw(ArgumentError("expects an URL"))
+    return from_remote_file(m, s, url, root_ex)
 end
 
 function eval_quoted_string_expr(m::Module, str)

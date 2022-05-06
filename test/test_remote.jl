@@ -15,7 +15,7 @@ module wrapper1
 	visible = [:A]
 	invisible = [:foo, :bar, :baz, :quux, :B, :C]
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" import A
+    @from_url "$root_url/basic.jl" import A
 end
 
 module wrapper2
@@ -24,7 +24,7 @@ module wrapper2
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" import A: foo
+	@from_url "$root_url/basic.jl" import A: foo
 end
 
 module wrapper3
@@ -33,7 +33,7 @@ module wrapper3
 	invisible = [:bar, :baz, :quux, :A, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" import A: foo, B
+	@from_url "$root_url/basic.jl" import A: foo, B
 end
 
 module wrapper4
@@ -42,7 +42,7 @@ module wrapper4
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" import A.foo
+    @from_url "$root_url/basic.jl" import A.foo
 end
 
 module wrapper5
@@ -51,7 +51,7 @@ module wrapper5
 	invisible = [:bar, :quux, :A, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" import A.foo, A.B.baz, A.B
+    @from_url "$root_url/basic.jl" import A.foo, A.B.baz, A.B
 end
 
 module wrapper6
@@ -60,7 +60,7 @@ module wrapper6
 	invisible = [:bar, :baz, :quux, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" using A
+	@from_url "$root_url/basic.jl" using A
 end
 
 module wrapper7
@@ -69,7 +69,7 @@ module wrapper7
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" using A: foo
+	@from_url "$root_url/basic.jl" using A: foo
 end
 
 module wrapper8
@@ -78,7 +78,7 @@ module wrapper8
 	invisible = [:bar, :baz, :quux, :A, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" using A: foo, B
+	@from_url "$root_url/basic.jl" using A: foo, B
 end
 
 module wrapper9
@@ -87,7 +87,7 @@ module wrapper9
 	invisible = [:foo, :bar, :quux, :A, :B, :C]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-	@from "$root_url/basic.jl" using A.B: baz
+	@from_url "$root_url/basic.jl" using A.B: baz
 end
 
 module wrapper10
@@ -96,7 +96,7 @@ module wrapper10
 	invisible = [:foo, :bar, :baz, :quux, :B]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" import A, C
+    @from_url "$root_url/basic.jl" import A, C
 end
 
 module wrapper11
@@ -105,7 +105,7 @@ module wrapper11
 	invisible = [:bar, :baz]
 	
 	root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" using A, C
+    @from_url "$root_url/basic.jl" using A, C
 end
 
 module wrapper12
@@ -114,7 +114,7 @@ module wrapper12
 	invisible = [:bar, :quux]
 	
     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-    @from "$root_url/basic.jl" begin
+    @from_url "$root_url/basic.jl" begin
 		using A
 		import A.B: baz
 		import C
@@ -127,7 +127,7 @@ root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
 @static if VERSION ≥ v"1.6" # as is not available in old Julia version
 	visible = [:D]
 	invisible = [:foo, :bar, :baz, :quux, :A, :B, :C]
-	@from "$root_url/basic.jl" import A as D
+	@from_url "$root_url/basic.jl" import A as D
 end # VERSION ≥ v"1.6"
 
 end
@@ -137,11 +137,11 @@ module remote_wrapper_without_import
 	using FromFile
 	root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
 	test1 = !isdefined(Main, :remote_hello_from_sideeffect)
-	@from "$root_url/remote_sideeffect.jl"
+	@from_url "$root_url/remote_sideeffect.jl"
 	test2 = isdefined(Main, :remote_hello_from_sideeffect)
 
 	last_value = Main.remote_hello_from_sideeffect
-	@from "$root_url/remote_sideeffect.jl"
+	@from_url "$root_url/remote_sideeffect.jl"
 	test3 = Main.remote_hello_from_sideeffect == last_value
 end
 
@@ -149,14 +149,14 @@ end
 # module wrapper_chain
 # 	using FromFile
 #     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-# 	@from "$root_url/chain.jl" import a, b, b2, c, c2, d, e
+# 	@from_url "$root_url/chain.jl" import a, b, b2, c, c2, d, e
 # end
 
 # module wrapper_revise
 # 	using FromFile
 # 	FromFile.track_modules() = true # force module tracking, even if running tests non-interactively
 #     root_url = "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/master/test"
-# 	@from "$root_url/revise.jl" import parent
+# 	@from_url "$root_url/revise.jl" import parent
 # 	FromFile.track_modules() = isinteractive()
 # end
 
@@ -204,7 +204,7 @@ end
 		end
 	end
 
-	# Check that nested @from works, and that navigating folder structures works
+	# Check that nested @from_url works, and that navigating folder structures works
 	# @test wrapper_chain.a == 1
 	# @test wrapper_chain.b == 2
 	# @test wrapper_chain.b2 == 2.5
@@ -213,7 +213,7 @@ end
 	# @test wrapper_chain.d == 4
 	# @test wrapper_chain.e == 5
 	
-	# Check that @from works in packages
+	# Check that @from_url works in packages
 	my_int = FromFileTestPack.MyInt(3)
 	@test FromFileTestPack.add_same_rand1(my_int) == FromFileTestPack.add_same_rand2(my_int)
 	@test FromFileTestPack.int_square(my_int).value == 9
@@ -221,7 +221,7 @@ end
 	@test FromFileTestPack.int_unwrap(my_int) == 3
 	@test FromFileTestPack.int_square_unwrap(my_int) == 9
 	
-	# Check that @from works without import statement
+	# Check that @from_url works without import statement
 	@test remote_wrapper_without_import.test1
 	@test remote_wrapper_without_import.test2
 	@test remote_wrapper_without_import.test3
