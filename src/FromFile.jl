@@ -12,6 +12,38 @@ function __init__()
     @require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" track(mod, path) = Revise.track(mod, path)
 end
 
+"""
+    @from <path/or/url/to/file>
+    @from <path/or/url/to/file> using my_module
+    @from <path/or/url/to/file> import my_object
+    @from <path/or/url/to/file> import my_module: my_object
+
+Import your object from another Julia script by treating the
+script as a module.
+
+# Examples
+
+In `basic.jl` it contains
+
+```julia
+module A
+    foo() = print("hello")
+end
+```
+
+and `A` can be imported via
+
+```julia
+@from "basic.jl" import A
+```
+
+or we can import `foo` that is inside `A`
+
+```julia
+@from "basic.jl" using A: foo
+@from "basic.jl" import A: foo
+```
+"""
 macro from(path::String, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
