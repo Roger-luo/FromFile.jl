@@ -61,9 +61,9 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
         for each in ex.args
             each isa Expr || continue
 
-            if each.head === :(:) # using/import A: a, b, c
+            if each.head === :(:) || each.head === :as # using/import A: a, b, c or import A as B
                 each.args[1].args[1] === :(.) && error("cannot load relative module from file")
-                push!(loading.args, Expr(:(:), Expr(:., fullname(file_module)..., each.args[1].args...), each.args[2:end]...) )
+                push!(loading.args, Expr(each.head, Expr(:., fullname(file_module)..., each.args[1].args...), each.args[2:end]...) )
             elseif each.head === :(.) # using/import A, B.C
                 each.args[1] === :(.) && error("cannot load relative module from file")
                 push!(loading.args, Expr(:., fullname(file_module)..., each.args...))
