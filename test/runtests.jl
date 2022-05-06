@@ -135,6 +135,14 @@ module wrapper_chain
 	@from "chain.jl" import a, b, b2, c, c2, d, e
 end
 
+module wrapper_url
+	using FromFile
+	visible = [:A]
+	invisible = [:foo, :bar, :baz, :quux, :B, :C]
+
+	@from "https://raw.githubusercontent.com/Roger-luo/FromFile.jl/ba3d96b57585a5710579d3d1f18729f06f5087e5/test/basic.jl" import A
+end
+
 module wrapper_revise
 	using FromFile
 	FromFile.track_modules() = true # force module tracking, even if running tests non-interactively
@@ -153,10 +161,12 @@ end
 	@test !isdefined(@__MODULE__, :quux)
 	
 	# Check the right things are or aren't there.
+
 	wrappers = (
 		wrapper1, wrapper2, wrapper3, wrapper4, wrapper5, wrapper6, wrapper7,
-		wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper13
+		wrapper8, wrapper9, wrapper10, wrapper11, wrapper12, wrapper13, wrapper_url
 	)
+
 	for wrapper in wrappers
 		for visible in wrapper.visible
 			@eval @test isdefined($wrapper, $(QuoteNode(visible)))
