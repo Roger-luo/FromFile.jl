@@ -4,11 +4,12 @@ authors = ["Roger Luo <rogerluo.rl18@gmail.com> and Patrick Kidger <contact@kidg
 version = "0.1.3"
 
 [deps]
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 
 [compat]
 Requires = "1.3"
-julia = "1.5"
+julia = "1.6"
 
 [extras]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"

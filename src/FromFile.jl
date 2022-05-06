@@ -3,6 +3,7 @@ module FromFile
 export @from
 
 using Requires
+using Downloads
 
 track(mod, path) = nothing
 
@@ -12,15 +13,49 @@ function __init__()
     @require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" track(mod, path) = Revise.track(mod, path)
 end
 
-macro from(path::String, ex::Expr)
+macro from(path, ex::Expr)
     esc(from_m(__module__, __source__, path, ex))
 end
 
-macro from(path::String)
+macro from(path)
     esc(from_m(__module__, __source__, path, Expr(:block))) 
 end
 
-function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
+# NOTE: we'd like to keep this pacakge minimal deps
+# so just copy paste this one-liner
+# Source: IsUrl.jl (MIT license)
+function isurl(str::AbstractString)
+    windowsregex = r"^[a-zA-Z]:[\\]"
+    urlregex = r"^[a-zA-Z][a-zA-Z\d+\-.]*:"
+    return !occursin(windowsregex, str) && occursin(urlregex, str)
+end
+
+function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
+    path_or_url = eval_path_const(m, path_or_url)
+    if isurl(path_or_url)
+        from_remote_file(m, s, path_or_url, root_ex)
+    else
+        if m === Main
+            file_module_sym = Symbol(path)
+        else
+            file_module_sym = Symbol(relpath(path, pathof(root)))
+        end
+        from_local_file(m, s, path_or_url, root_ex, file_module_sym)
+    end
+end
+
+function eval_path_const(m::Module, path)
+    path isa AbstractString && return path
+    return Base.eval(m, path)
+end
+
+function from_remote_file(m::Module, s::LineNumberNode, url::String, root_ex::Expr)
+    path = Downloads.download(url)
+    file_module_sym = Symbol(url)
+    return from_local_file(m, s, path, root_ex, file_module_sym)
+end
+
+function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Expr, file_module_sym::Symbol)
     import_exs = if root_ex.head === :block
         filter(ex -> !(ex isa LineNumberNode), root_ex.args)
     else
@@ -40,12 +75,6 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
     end
     path = abspath(path)
 
-    if root === Main
-        file_module_sym = Symbol(path)
-    else
-        file_module_sym = Symbol(relpath(path, pathof(root)))
-    end
-
     if isdefined(root, file_module_sym)
         file_module = getfield(root, file_module_sym)
     else
@@ -55,7 +84,8 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
         track_modules() && track(file_module, path)
     end
 
-    return Expr(:block, map(import_exs) do ex
+    ret = Expr(:block)
+    for ex in import_exs
         loading = Expr(ex.head)
 
         for each in ex.args
@@ -71,8 +101,9 @@ function from_m(m::Module, s::LineNumberNode, path::String, root_ex::Expr)
                 error("invalid syntax $ex")
             end
         end
-        return loading
-    end...)
+        push!(ret.args, loading)
+    end
+    return ret
 end
 
 end
