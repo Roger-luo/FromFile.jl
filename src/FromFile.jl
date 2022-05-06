@@ -31,7 +31,7 @@ function isurl(str::AbstractString)
 end
 
 function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
-    path_or_url = eval_path_const(m, path_or_url)
+    path_or_url = eval_quoted_string_expr(m, path_or_url)
     if isurl(path_or_url)
         from_remote_file(m, s, path_or_url, root_ex)
     else
@@ -39,9 +39,14 @@ function from_m(m::Module, s::LineNumberNode, path_or_url, root_ex::Expr)
     end
 end
 
-function eval_path_const(m::Module, path)
-    path isa AbstractString && return path
-    return Base.eval(m, path)
+function eval_quoted_string_expr(m::Module, str)
+    str isa String && return str
+    Meta.isexpr(str, :string) || throw(ArgumentError("expect a String, got $str"))
+    tokens = map(str.args) do s
+        s isa String && return s
+        return Base.eval(m, s)
+    end
+    return join(tokens)
 end
 
 function from_remote_file(m::Module, s::LineNumberNode, url::String, root_ex::Expr)

@@ -4,6 +4,12 @@ using Test
 using FromFile
 import FromFileTestPack
 
+@testset "eval_quoted_string_expr" begin
+	@test_throws ArgumentError FromFile.eval_quoted_string_expr(Main, :(joinpath("aaa", "bbb")))
+	@test FromFile.eval_quoted_string_expr(TestRemote, "aaaa") == "aaaa"
+	@test FromFile.eval_quoted_string_expr(TestRemote, :("aaaa$(1+1)")) == "aaaa2"
+end
+
 module wrapper1
 	using FromFile
 	visible = [:A]
