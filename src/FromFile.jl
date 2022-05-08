@@ -2,8 +2,8 @@ module FromFile
 
 export @from, @from_url
 
-using Requires
-using Downloads
+using Requires: @require
+using Downloads: download
 
 track(mod, path) = nothing
 
@@ -63,7 +63,7 @@ function from_remote_file(m::Module, s::LineNumberNode, url::String, root_ex::Ex
     root = Base.moduleroot(m)
     file_module_sym = Symbol(url)
     file_module = lazy_load_file(root, file_module_sym) do
-        Downloads.download(url) 
+        download(url) 
     end
     return load_symbols_from_file(file_module, file_module_sym, parse_import_stmts(root_ex))
 end
