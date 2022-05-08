@@ -45,7 +45,7 @@ end
 
 function from_url_m(m::Module, s::LineNumberNode, url, root_ex::Expr = Expr(:block))
     url = eval_quoted_string_expr(m, url)
-    isurl(url) || throw(ArgumentError("expects an URL"))
+    isurl(url) || throw(ArgumentError("expects an URL in @from_url"))
     return from_remote_file(m, s, url, root_ex)
 end
 
@@ -86,7 +86,7 @@ function from_local_file(m::Module, s::LineNumberNode, path::String, root_ex::Ex
         file_module_sym = Symbol(relpath(path, pathof(root)))
     end
 
-    file_module = lazy_load_file(path, root, file_module_sym)
+    file_module = lazy_load_file(()->path, root, file_module_sym)
     return load_symbols_from_file(file_module, file_module_sym, parse_import_stmts(root_ex))
 end
 
@@ -99,10 +99,6 @@ function parse_import_stmts(root_ex::Expr)
 
     all(ex -> ex.head === :using || ex.head === :import, import_exs) || error("expected using/import statement")
     return import_exs
-end
-
-function lazy_load_file(path::String, root::Module, file_module_sym::Symbol)
-    return lazy_load_file(()->path, root, file_module_sym)
 end
 
 function lazy_load_file(f, root::Module, file_module_sym::Symbol)
