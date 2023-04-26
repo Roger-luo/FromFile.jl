@@ -36,7 +36,7 @@ bar() = foo()
 foo() = println("hi")
 ```
 
-File systems may be navigated: `@from "../folder/file.jl" import foo`
+File systems may be navigated: `@from "../folder/file.jl" import foo`, whereby the @from macro will safely translate system specific path formulations by calling abspath() under the hood.
 
 The usual import syntax is supported; the only difference is that the objects are looked up in the file requested: `@from "file.jl" using MyModule`; `@from "file.jl" import MyModule: foo`; `@from "file.jl" import foo, bar`.
 
