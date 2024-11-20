@@ -9,7 +9,7 @@ module wrapper1
 	using FromFile
 	visible = [:A]
 	invisible = [:foo, :bar, :baz, :quux, :B, :C]
-	
+
     @from "basic.jl" import A
 end
 
@@ -17,7 +17,7 @@ module wrapper2
 	using FromFile
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
-	
+
 	@from "basic.jl" import A: foo
 end
 
@@ -25,7 +25,7 @@ module wrapper3
 	using FromFile
 	visible = [:foo, :B]
 	invisible = [:bar, :baz, :quux, :A, :C]
-	
+
 	@from "basic.jl" import A: foo, B
 end
 
@@ -33,7 +33,7 @@ module wrapper4
 	using FromFile
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
-	
+
     @from "basic.jl" import A.foo
 end
 
@@ -41,7 +41,7 @@ module wrapper5
 	using FromFile
 	visible = [:foo, :baz, :B]
 	invisible = [:bar, :quux, :A, :C]
-	
+
     @from "basic.jl" import A.foo, A.B.baz, A.B
 end
 
@@ -49,7 +49,7 @@ module wrapper6
 	using FromFile
 	visible = [:foo, :A, :B]
 	invisible = [:bar, :baz, :quux, :C]
-	
+
 	@from "basic.jl" using A
 end
 
@@ -57,7 +57,7 @@ module wrapper7
 	using FromFile
 	visible = [:foo]
 	invisible = [:bar, :baz, :quux, :A, :B, :C]
-	
+
 	@from "basic.jl" using A: foo
 end
 
@@ -65,7 +65,7 @@ module wrapper8
 	using FromFile
 	visible = [:foo, :B]
 	invisible = [:bar, :baz, :quux, :A, :C]
-	
+
 	@from "basic.jl" using A: foo, B
 end
 
@@ -73,7 +73,7 @@ module wrapper9
 	using FromFile
 	visible = [:baz]
 	invisible = [:foo, :bar, :quux, :A, :B, :C]
-	
+
 	@from "basic.jl" using A.B: baz
 end
 
@@ -81,7 +81,7 @@ module wrapper10
 	using FromFile
 	visible = [:A, :C]
 	invisible = [:foo, :bar, :baz, :quux, :B]
-	
+
     @from "basic.jl" import A, C
 end
 
@@ -89,7 +89,7 @@ module wrapper11
 	using FromFile
 	visible = [:foo, :quux, :A, :B, :C]
 	invisible = [:bar, :baz]
-	
+
     @from "basic.jl" using A, C
 end
 
@@ -97,7 +97,7 @@ module wrapper12
 	using FromFile
 	visible = [:foo, :A, :B, :baz, :C]
 	invisible = [:bar, :quux]
-	
+
     @from "basic.jl" begin
 		using A
 		import A.B: baz
@@ -194,7 +194,7 @@ end
 	@test wrapper_chain.c2 == 3.5
 	@test wrapper_chain.d == 4
 	@test wrapper_chain.e == 5
-	
+
 	# Check that @from works in packages
 	my_int = FromFileTestPack.MyInt(3)
 	@test FromFileTestPack.add_same_rand1(my_int) == FromFileTestPack.add_same_rand2(my_int)
@@ -202,11 +202,19 @@ end
 	@test FromFileTestPack.int_cube(my_int).value == 27
 	@test FromFileTestPack.int_unwrap(my_int) == 3
 	@test FromFileTestPack.int_square_unwrap(my_int) == 9
-	
+
 	# Check that @from works without import statement
 	@test wrapper_without_import.test1
 	@test wrapper_without_import.test2
 	@test wrapper_without_import.test3
+end
+
+if isdefined(Core, :var"@latestworld")
+import Core: @latestworld
+else
+macro latestworld()
+	nothing
+end
 end
 
 @testset "Revise Tests" begin
@@ -221,6 +229,7 @@ end
 
 		cp(subfile_revised, subfile; force = true)
 		Revise.revise()
+		@latestworld
 
 		@test wrapper_revise.parent.g1() == "oneone"
 		@test isempty(methods(wrapper_revise.parent.child.f2)) # method `subfile.f2` is deleted
